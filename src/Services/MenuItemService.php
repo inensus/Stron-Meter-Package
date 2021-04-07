@@ -15,6 +15,10 @@ class MenuItemService
 
     public function createMenuItems()
     {
+        $menuItem = $this->menuItems->newQuery()->where('name', 'Stron Meter')->first();
+        if ($menuItem) {
+            return [];
+        }
         $menuItem = [
             'name' => 'Stron Meter',
             'url_slug' => '',
