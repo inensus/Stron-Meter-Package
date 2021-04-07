@@ -2,16 +2,12 @@
 
 namespace Inensus\StronMeter\Providers;
 
-use App\Models\MainSettings;
-use App\Models\Meter\MeterParameter;
-use App\Models\Transaction\Transaction;
-use GuzzleHttp\Client;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Inensus\StronMeter\Console\Commands\InstallPackage;
-use Inensus\StronMeter\Models\StronCredential;
-use Inensus\StronMeter\Models\StronTransaction;
+use Inensus\StronMeter\Console\Commands\UpdatePackage;
 use Inensus\StronMeter\StronMeterApi;
 
 class StronMeterServiceProvider extends ServiceProvider
@@ -23,7 +19,7 @@ class StronMeterServiceProvider extends ServiceProvider
             $this->publishConfigFiles();
             $this->publishVueFiles();
             $this->publishMigrations($filesystem);
-            $this->commands([InstallPackage::class]);
+            $this->commands([InstallPackage::class,UpdatePackage::class]);
         }
     }
 
@@ -32,22 +28,7 @@ class StronMeterServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(__DIR__ . '/../../config/stron-meter.php', 'stron-meter');
         $this->app->register(EventServiceProvider::class);
         $this->app->register(ObserverServiceProvider::class);
-        $this->app->bind('StronMeterApi', function () {
-            $client = new Client();
-            $meterParameter = new MeterParameter();
-            $transaction = new Transaction();
-            $stronTransaction = new StronTransaction();
-            $mainSettings = new MainSettings();
-            $stronCredential = new StronCredential();
-            return new StronMeterApi(
-                $client,
-                $meterParameter,
-                $stronTransaction,
-                $transaction,
-                $mainSettings,
-                $stronCredential
-            );
-        });
+        $this->app->bind('StronMeterApi',StronMeterApi::class);
     }
 
     public function publishConfigFiles()
@@ -77,6 +58,14 @@ class StronMeterServiceProvider extends ServiceProvider
         $timestamp = date('Y_m_d_His');
         return Collection::make($this->app->databasePath() . DIRECTORY_SEPARATOR . 'migrations' . DIRECTORY_SEPARATOR)
             ->flatMap(function ($path) use ($filesystem) {
+                if (count($filesystem->glob($path . '*_create_stron_tables.php'))) {
+                    $file = $filesystem->glob($path . '*_create_stron_tables.php')[0];
+
+                    file_put_contents($file, file_get_contents(__DIR__ . '/../../database/migrations/create_stron_tables.php.stub'));
+                    DB::table('migrations')
+                        ->where('migration',substr(explode("/migrations/", $file)[1], 0, -4))
+                        ->delete();
+                }
                 return $filesystem->glob($path . '*_create_stron_tables.php');
             })->push($this->app->databasePath() . "/migrations/{$timestamp}_create_stron_tables.php")
             ->first();
