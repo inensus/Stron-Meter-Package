@@ -22,7 +22,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Inensus\\StronMeter\\Providers\\ServiceProvider"
+        "Inensus\\StronMeter\\Providers\\StronMeterServiceProvider"
       ]
     }
   }
