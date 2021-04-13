@@ -31,7 +31,7 @@ class InstallPackage extends Command
         $this->info('Installing Stron Meter Integration Package\n');
         $this->info('Copying migrations\n');
         $this->call('vendor:publish', [
-            '--provider' => "Inensus\StronMeter\Providers\ServiceProvider",
+            '--provider' => "Inensus\StronMeter\Providers\StronMeterServiceProvider",
             '--tag' => "migrations"
         ]);
 
@@ -41,7 +41,7 @@ class InstallPackage extends Command
         $this->info('Copying vue files\n');
 
         $this->call('vendor:publish', [
-            '--provider' => "Inensus\StronMeter\Providers\ServiceProvider",
+            '--provider' => "Inensus\StronMeter\Providers\StronMeterServiceProvider",
             '--tag' => "vue-components"
         ]);
         $this->apiHelpers->registerStronMeterManufacturer();
