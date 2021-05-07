@@ -29,39 +29,57 @@ class InstallPackage extends Command
     public function handle(): void
     {
         $this->info('Installing Stron Meter Integration Package\n');
+        $this->publishMigrations();
+        $this->createDatabaseTables();
+        $this->publishVueFiles();
+        $this->apiHelpers->registerStronMeterManufacturer();
+        $this->credentialService->createCredentials();
+        $this->createPluginRecord();
+        $this->call('routes:generate');
+        $this->createMenuItems();
+        $this->call('sidebar:generate');
+        $this->info('Package installed successfully..');
+    }
+
+    private function publishMigrations()
+    {
         $this->info('Copying migrations\n');
         $this->call('vendor:publish', [
             '--provider' => "Inensus\StronMeter\Providers\StronMeterServiceProvider",
             '--tag' => "migrations"
         ]);
+    }
 
+    private function createDatabaseTables()
+    {
         $this->info('Creating database tables\n');
         $this->call('migrate');
+    }
 
+    private function publishVueFiles()
+    {
         $this->info('Copying vue files\n');
-
         $this->call('vendor:publish', [
             '--provider' => "Inensus\StronMeter\Providers\StronMeterServiceProvider",
             '--tag' => "vue-components"
         ]);
-        $this->apiHelpers->registerStronMeterManufacturer();
-        $this->credentialService->createCredentials();
+    }
 
+    private function createPluginRecord()
+    {
         $this->call('plugin:add', [
             'name' => "StronMeter",
             'composer_name' => "inensus/stron-meter",
             'description' => "Stron Meter integration package for MicroPowerManager",
         ]);
-        $this->call('routes:generate');
+    }
 
+    private function createMenuItems()
+    {
         $menuItems = $this->menuItemService->createMenuItems();
         $this->call('menu-items:generate', [
             'menuItem' => $menuItems['menuItem'],
             'subMenuItems' => $menuItems['subMenuItems'],
         ]);
-
-        $this->call('sidebar:generate');
-
-        $this->info('Package installed successfully..');
     }
 }
