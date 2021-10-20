@@ -2,9 +2,6 @@
   "name": "inensus/stron-meter",
   "description": "Package description",
   "type": "package",
-  "require": {
-    "guzzlehttp/guzzle": "7.2.0"
-  },
   "license": "MIT",
   "authors": [
     {
